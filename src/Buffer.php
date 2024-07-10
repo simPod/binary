@@ -98,7 +98,7 @@ final class Buffer implements
         return $this;
     }
 
-    final public function writeVarInt(int $number): self
+    public function writeVarInt(int $number): self
     {
         $zigZagNumber = $number << 1;
         if ($number < 0) {
@@ -108,7 +108,7 @@ final class Buffer implements
         return $this->writeVarUint($zigZagNumber);
     }
 
-    final public function writeVarUint(int $number): self
+    public function writeVarUint(int $number): self
     {
         $bytes = [];
 
@@ -271,7 +271,7 @@ final class Buffer implements
     /**
      * @throws BinaryException
      */
-    final public function consumeVarInt(): int
+    public function consumeVarInt(): int
     {
         [$number, $read] = $this->doReadVarInt();
 
@@ -282,7 +282,7 @@ final class Buffer implements
         return $number;
     }
 
-    final public function readVarInt(): int
+    public function readVarInt(): int
     {
         [$number, ] = $this->doReadVarInt();
 
@@ -292,7 +292,7 @@ final class Buffer implements
     /**
      * @throws BinaryException
      */
-    final public function consumeVarUint(): int
+    public function consumeVarUint(): int
     {
         [$number, $read] = $this->doReadVarUint();
 
@@ -303,7 +303,7 @@ final class Buffer implements
         return $number;
     }
 
-    final public function readVarUint(): int
+    public function readVarUint(): int
     {
         [$number, ] = $this->doReadVarUint();
 
@@ -401,6 +401,11 @@ final class Buffer implements
     public function count(): int
     {
         return $this->size;
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->bytes === '';
     }
 
     /**

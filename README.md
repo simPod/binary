@@ -77,6 +77,8 @@ var_dump(
 - [x] `f32 (float)`
 - [x] `f64 (double)`
 - [x] `string`
+- [x] `varuint`
+- [x] `varint`
 
 ## Testing
 
@@ -86,4 +88,4 @@ $ composer test
 
 ## License
 
-The MIT License (MIT). See [License File](LICENSE.md) for more information.
+The MIT License (MIT). See [License File](LICENSE) for more information.
