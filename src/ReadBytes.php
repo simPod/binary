@@ -10,11 +10,9 @@ namespace Kafkiansky\Binary;
 interface ReadBytes
 {
     /**
-     * @param positive-int $n
-     *
      * @throws BinaryException
      *
-     * @return non-empty-string
+     * @psalm-return ($n is positive-int ? non-empty-string : string)
      */
     public function read(int $n): string;
 }
