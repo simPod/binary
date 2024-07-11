@@ -409,6 +409,17 @@ final class Buffer implements
     }
 
     /**
+     * @throws BinaryException
+     */
+    public function split(int $size): self
+    {
+        return new self(
+            $this->consume($size),
+            $this->endianness,
+        );
+    }
+
+    /**
      * @return array{int, int}
      */
     private function doReadVarInt(): array

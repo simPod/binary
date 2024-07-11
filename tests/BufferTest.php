@@ -304,4 +304,17 @@ final class BufferTest extends TestCase
         self::expectExceptionMessage('Not enough bytes to read: need - 1, actual - 0.');
         Buffer::empty()->readInt8();
     }
+
+    public function testSplit(): void
+    {
+        $buffer = Buffer::empty(Endianness::network());
+        $buffer->writeUint32(20);
+        $buffer->writeUint32(30);
+
+        $newBuffer = $buffer->split(4);
+        self::assertCount(4, $newBuffer);
+        self::assertSame(20, $newBuffer->consumeUint32());
+        self::assertCount(4, $buffer);
+        self::assertSame(30, $buffer->consumeUint32());
+    }
 }
