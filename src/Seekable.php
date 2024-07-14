@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Kafkiansky\Binary;
 
 /**
- * @api
+ * @internal
+ * @psalm-internal Kafkiansky\Binary
  */
-interface WriteBytes
+interface Seekable
 {
     /**
-     * @param non-empty-string $bytes
      * @throws BinaryException
      */
-    public function write(string $bytes): self;
+    public function seek(): void;
 }

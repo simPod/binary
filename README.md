@@ -54,12 +54,50 @@ $bytes = Buffer::empty()
 $buffer = Buffer::fromString($bytes);
 
 var_dump(
-    $buffer->readInt32(),
-    $buffer->read($buffer->readInt16()),
-    $buffer->readInt32(),
-    $buffer->readInt16(),
-    $buffer->readInt32(),
-    $buffer->readInt32(),
+    $buffer->consumeInt32(),
+    $buffer->consume($buffer->consumeInt16()),
+    $buffer->consumeInt32(),
+    $buffer->consumeInt16(),
+    $buffer->consumeInt32(),
+    $buffer->consumeInt32(),
+    \assert(0 === \count($buffer)),
+);
+```
+
+#### Stream
+
+```php
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__.'/../vendor/autoload.php';
+
+use Kafkiansky\Binary\Buffer;
+
+$resource = fopen('php://temp', 'a+');
+\assert(\is_resource($resource));
+
+$bytes = Buffer::fromResource($resource)
+    ->writeInt32(1)
+    ->writeInt16(6)
+    ->write('events')
+    ->writeInt32(1)
+    ->writeInt16(1)
+    ->writeInt32(0)
+    ->writeInt32(0)
+    ->reset()
+;
+
+$buffer = Buffer::fromString($bytes);
+
+var_dump(
+    $buffer->consumeInt32(),
+    $buffer->consume($buffer->consumeInt16()),
+    $buffer->consumeInt32(),
+    $buffer->consumeInt16(),
+    $buffer->consumeInt32(),
+    $buffer->consumeInt32(),
     \assert(0 === \count($buffer)),
 );
 ```

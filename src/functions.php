@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kafkiansky\Binary;
 
+use Kafkiansky\Binary\Exception;
 use Psl\Type;
 
 /**
@@ -34,7 +35,7 @@ function pack(string $format, mixed $value): string
  */
 function unpack(string $format, string $bytes, Type\TypeInterface $type)
 {
-    $value = \unpack($format, $bytes) ?: throw BinaryException::whenBytesCannotBeUnpacked($bytes, $format);
+    $value = \unpack($format, $bytes) ?: throw new Exception\BytesCannotBeUnpacked($bytes, $format);
 
     return $type->coerce($value[1] ?? 0);
 }
