@@ -6,12 +6,16 @@ namespace Kafkiansky\Binary\Tests;
 
 use Kafkiansky\Binary\BinaryException;
 use Kafkiansky\Binary\Buffer;
+use Kafkiansky\Binary\ByteStream;
 use Kafkiansky\Binary\Endianness;
+use Kafkiansky\Binary\ResourceStream;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Kafkiansky\Binary\Buffer
- */
+#[CoversClass(Buffer::class)]
+#[CoversClass(ByteStream::class)]
+#[CoversClass(ResourceStream::class)]
 final class BufferTest extends TestCase
 {
     public static function readFixtures(): iterable
@@ -259,49 +263,93 @@ final class BufferTest extends TestCase
     }
 
     /**
-     * @dataProvider readFixtures
-     *
      * @template T
      * @param callable(Buffer, T): Buffer $write
      * @param callable(Buffer): T         $read
      * @param T                           $value
      */
-    public function testRead(callable $write, callable $read, mixed $value, int $size): void
+    #[DataProvider('readFixtures')]
+    public function testReadByteStream(callable $write, callable $read, mixed $value, int $size): void
     {
         /** @var Endianness $endian */
         foreach ([Endianness::big(), Endianness::little()] as $endian) {
-            $buffer = Buffer::empty($endian);
+            $buffer = Buffer::fromString('', $endian);
             $buffer = $write($buffer, $value);
-            self::assertEquals($size, \count($buffer));
+            self::assertCount($size, $buffer);
             self::assertSame($value, $read($buffer));
-            self::assertEquals($size, \count($buffer));
+            self::assertCount($size, $buffer);
         }
     }
 
     /**
-     * @dataProvider consumeFixtures
-     *
      * @template T
      * @param callable(Buffer, T): Buffer $write
      * @param callable(Buffer): T         $read
      * @param T                           $value
      */
-    public function testConsume(callable $write, callable $read, mixed $value, int $size): void
+    #[DataProvider('readFixtures')]
+    public function testReadResourceStream(callable $write, callable $read, mixed $value, int $size): void
     {
         /** @var Endianness $endian */
         foreach ([Endianness::big(), Endianness::little()] as $endian) {
-            $buffer = Buffer::empty($endian);
+            $resource = fopen('php://temp', 'a+');
+            self::assertIsResource($resource);
+
+            $buffer = Buffer::fromResource($resource, $endian);
             $buffer = $write($buffer, $value);
-            self::assertEquals($size, \count($buffer));
+            self::assertCount($size, $buffer);
+            fseek($resource, 0);
             self::assertSame($value, $read($buffer));
-            self::assertEquals(0, \count($buffer));
+            self::assertCount($size, $buffer);
+        }
+    }
+
+    /**
+     * @template T
+     * @param callable(Buffer, T): Buffer $write
+     * @param callable(Buffer): T         $read
+     * @param T                           $value
+     */
+    #[DataProvider('consumeFixtures')]
+    public function testConsumeByteStream(callable $write, callable $read, mixed $value, int $size): void
+    {
+        /** @var Endianness $endian */
+        foreach ([Endianness::big(), Endianness::little()] as $endian) {
+            $buffer = Buffer::fromString('', $endian);
+            $buffer = $write($buffer, $value);
+            self::assertCount($size, $buffer);
+            self::assertSame($value, $read($buffer));
+            self::assertCount(0, $buffer);
+        }
+    }
+
+    /**
+     * @template T
+     * @param callable(Buffer, T): Buffer $write
+     * @param callable(Buffer): T         $read
+     * @param T                           $value
+     */
+    #[DataProvider('consumeFixtures')]
+    public function testConsumeResourceStream(callable $write, callable $read, mixed $value, int $size): void
+    {
+        /** @var Endianness $endian */
+        foreach ([Endianness::big(), Endianness::little()] as $endian) {
+            $resource = fopen('php://temp', 'a+');
+            self::assertIsResource($resource);
+
+            $buffer = Buffer::fromResource($resource, $endian);
+            $buffer = $write($buffer, $value);
+            self::assertCount($size, $buffer);
+            fseek($resource, 0);
+            self::assertSame($value, $read($buffer));
+            self::assertCount(0, $buffer);
         }
     }
 
     public function testEmptyBuffer(): void
     {
         self::expectException(BinaryException::class);
-        self::expectExceptionMessage('Not enough bytes to read: need - 1, actual - 0.');
+        self::expectExceptionMessage('Is not enough bytes to read: need is 1, but actual is 0.');
         Buffer::empty()->readInt8();
     }
 

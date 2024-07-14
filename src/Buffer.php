@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kafkiansky\Binary;
 
+use Kafkiansky\Binary\Exception;
 use Psl\Type;
 
 /**
@@ -13,22 +14,30 @@ final class Buffer implements
     WriteBytes,
     ReadBytes,
     ConsumeBytes,
-    \Stringable,
     \Countable
 {
     private readonly Endianness $endianness;
 
+    private readonly Stream $stream;
+
     /** @var int<0, max> */
     private int $size;
 
+    /**
+     * @throws BinaryException
+     */
     private function __construct(
-        private string $bytes = '',
+        ?Stream $stream = null,
         ?Endianness $endianness = null,
     ) {
+        $this->stream = $stream ?: new ByteStream();
         $this->endianness = $endianness ?: Endianness::network();
-        $this->size = strlen($this->bytes);
+        $this->size = $this->stream->size();
     }
 
+    /**
+     * @throws BinaryException
+     */
     public static function empty(?Endianness $endianness = null): self
     {
         return new self(endianness: $endianness);
@@ -36,10 +45,28 @@ final class Buffer implements
 
     /**
      * @param non-empty-string $bytes
+     * @throws BinaryException
      */
     public static function fromString(string $bytes, ?Endianness $endianness = null): self
     {
-        return new self($bytes, $endianness);
+        return new self(new ByteStream($bytes), $endianness);
+    }
+
+    /**
+     * @param resource $resource
+     * @throws BinaryException
+     */
+    public static function fromResource($resource, ?Endianness $endianness = null): self
+    {
+        return new self(new ResourceStream($resource), $endianness);
+    }
+
+    /**
+     * @throws BinaryException
+     */
+    public static function fromStream(Stream $stream, ?Endianness $endianness = null): self
+    {
+        return new self($stream, $endianness);
     }
 
     public function writeInt8(int $value): self
@@ -98,6 +125,9 @@ final class Buffer implements
         return $this;
     }
 
+    /**
+     * @throws BinaryException
+     */
     public function writeVarInt(int $number): self
     {
         $zigZagNumber = $number << 1;
@@ -108,6 +138,9 @@ final class Buffer implements
         return $this->writeVarUint($zigZagNumber);
     }
 
+    /**
+     * @throws BinaryException
+     */
     public function writeVarUint(int $number): self
     {
         $bytes = [];
@@ -342,9 +375,19 @@ final class Buffer implements
         return $this->endianness->consumeDouble($this);
     }
 
+    /**
+     * @throws BinaryException
+     */
     public function reset(): string
     {
-        [$bytes, $this->bytes, $this->size] = [$this->bytes, '', 0];
+        if ($this->stream instanceof Seekable) {
+            $this->stream->seek();
+        }
+
+        [$bytes, $this->size] = [
+            $this->stream->consume($this->size),
+            0,
+        ];
 
         return $bytes;
     }
@@ -355,12 +398,10 @@ final class Buffer implements
     public function consume(int $n): string
     {
         if ($n > $this->size) {
-            throw BinaryException::whenNotEnoughBytesToRead($n, $this->size);
+            throw new Exception\BytesIsNotEnough($n, $this->size);
         }
 
-        /** @psalm-var non-empty-string $buf */
-        $buf = substr($this->bytes, 0, $n);
-        $this->bytes = substr($this->bytes, $n);
+        $buf = $this->stream->consume($n);
         /** @psalm-suppress InvalidPropertyAssignmentValue No errors here. */
         $this->size -= $n;
 
@@ -373,26 +414,21 @@ final class Buffer implements
     public function read(int $n): string
     {
         if ($n > $this->size) {
-            throw BinaryException::whenNotEnoughBytesToRead($n, $this->size);
+            throw new Exception\BytesIsNotEnough($n, $this->size);
         }
 
-        /** @psalm-var non-empty-string $buf */
-        $buf = substr($this->bytes, 0, $n);
-
-        return $buf;
+        return $this->stream->read($n);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function write(string $bytes): self
     {
-        $this->bytes .= $bytes;
+        $this->stream->write($bytes);
         $this->size += strlen($bytes);
 
         return $this;
-    }
-
-    public function __toString(): string
-    {
-        return $this->bytes;
     }
 
     /**
@@ -405,7 +441,7 @@ final class Buffer implements
 
     public function isEmpty(): bool
     {
-        return $this->bytes === '';
+        return $this->stream->eof();
     }
 
     /**
@@ -413,7 +449,8 @@ final class Buffer implements
      */
     public function split(int $size): self
     {
-        return new self(
+        // It makes no sense to keep the original stream as a resource if that's what it was.
+        return self::fromString(
             $this->consume($size),
             $this->endianness,
         );
@@ -442,7 +479,7 @@ final class Buffer implements
     {
         $number = $shift = $bytesRead = 0;
 
-        foreach (str_split($this->bytes) as $byte) {
+        foreach ($this->stream as $byte) {
             $number |= (ord($byte) & 127) << $shift;
             $shift += 7;
             $bytesRead++;

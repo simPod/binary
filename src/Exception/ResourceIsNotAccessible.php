@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Kafkiansky\Binary\Exception;
+
+use Kafkiansky\Binary\BinaryException;
+
+/**
+ * @api
+ */
+final class ResourceIsNotAccessible extends \Exception implements BinaryException
+{
+}
