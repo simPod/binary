@@ -365,4 +365,14 @@ final class BufferTest extends TestCase
         self::assertCount(4, $buffer);
         self::assertSame(30, $buffer->consumeUint32());
     }
+
+    public function testClone(): void
+    {
+        $buffer = Buffer::empty(Endianness::network());
+        $buffer->writeUint32(2);
+        $buffer2 = $buffer->clone();
+        self::assertCount(0, $buffer2);
+        $buffer2->writeUint32(2);
+        self::assertSame($buffer->reset(), $buffer2->reset());
+    }
 }
