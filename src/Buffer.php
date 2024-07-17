@@ -425,8 +425,10 @@ final class Buffer implements
      */
     public function write(string $bytes): self
     {
-        $this->stream->write($bytes);
-        $this->size += strlen($bytes);
+        if ('' !== $bytes) {
+            $this->stream->write($bytes);
+            $this->size += strlen($bytes);
+        }
 
         return $this;
     }

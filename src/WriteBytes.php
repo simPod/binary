@@ -10,7 +10,6 @@ namespace Kafkiansky\Binary;
 interface WriteBytes
 {
     /**
-     * @param non-empty-string $bytes
      * @throws BinaryException
      */
     public function write(string $bytes): self;
