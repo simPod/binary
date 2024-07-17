@@ -457,6 +457,14 @@ final class Buffer implements
     }
 
     /**
+     * @throws BinaryException
+     */
+    public function clone(): self
+    {
+        return $this->split(0);
+    }
+
+    /**
      * @return array{int, int}
      */
     private function doReadVarInt(): array
