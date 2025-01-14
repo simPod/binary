@@ -10,8 +10,8 @@
         }
     ],
     "require": {
-        "php": ">=8.1",
-        "azjezz/psl": "^2.9"
+        "php": "^8.2",
+        "azjezz/psl": "^3"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.41",

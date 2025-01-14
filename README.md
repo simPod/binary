@@ -6,7 +6,7 @@ This package can be installed as a [Composer](https://getcomposer.org/) dependen
 composer require kafkiansky/binary
 ```
 
-This package requires PHP 8.1 or later.
+This package requires PHP 8.2 or later.
 
 ## Usage
 
