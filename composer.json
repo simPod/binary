@@ -10,15 +10,15 @@
         }
     ],
     "require": {
-        "php": "^8.2",
-        "azjezz/psl": "^3 || ^4 || ^5"
+        "php": "^8.4",
+        "php-standard-library/type": "^6.0"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.41",
         "phpunit/phpunit": "^10.5",
-        "psalm/plugin-phpunit": "^0.18.4",
+        "psalm/plugin-phpunit": "^0.19 || ^0.20",
         "squizlabs/php_codesniffer": "^3.8",
-        "vimeo/psalm": "^5.18"
+        "vimeo/psalm": "^6.0"
     },
     "minimum-stability": "stable",
     "autoload": {
